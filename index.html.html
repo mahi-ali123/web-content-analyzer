@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Content Analyzer</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a0ca3;
+            --secondary: #3f37c9;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #f72585;
+            --gray: #adb5bd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7ff;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .tool-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .tool-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section, .results-section {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-section:hover, .results-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-input {
+            min-height: 400px;
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            resize: vertical;
+            margin-bottom: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .content-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+
+        .search-bar {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px 0 0 8px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .search-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 1.5rem;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .analyze-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: auto;
+        }
+
+        .analyze-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        }
+
+        .results-section h2 {
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            border: 1px solid #e0e0e0;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .keyword-results {
+            margin-top: 1.5rem;
+        }
+
+        .keyword-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .keyword-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .keyword-count {
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            margin-right: 0.75rem;
+        }
+
+        .keyword-density {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .keyword-good {
+            color: var(--success);
+        }
+
+        .keyword-warning {
+            color: var(--warning);
+        }
+
+        .keyword-bad {
+            color: var(--danger);
+        }
+
+        .highlight {
+            background-color: #fff3bf;
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+
+        .heading-results {
+            margin-top: 1.5rem;
+        }
+
+        .heading-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .heading-tag {
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .heading-count {
+            font-weight: 600;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .seo-feedback {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .feedback-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .feedback-icon {
+            margin-right: 0.5rem;
+            margin-top: 2px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SEO Content Analyzer</h1>
+            <p class="subtitle">Optimize your content for search engines with real-time analysis</p>
+        </header>
+
+        <div class="tool-container">
+            <div class="input-section">
+                <div class="search-bar">
+                    <input type="text" class="search-input" placeholder="Search for keywords..." id="keywordSearch">
+                    <button class="search-btn" id="searchBtn">Search</button>
+                </div>
+                <textarea class="content-input" id="contentInput" placeholder="Paste your content here to analyze..."></textarea>
+                <button class="analyze-btn" id="analyzeBtn">Analyze Content</button>
+            </div>
+
+            <div class="results-section">
+                <h2>SEO Analysis Results</h2>
+                
+                <div class="results-grid">
+                    <div class="result-card">
+                        <div class="result-value" id="wordCount">0</div>
+                        <div class="result-label">Words</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-value" id="charCount">0</div>
+                        <div class="result-label">Characters</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-value" id="paraCount">0</div>
+                        <div class="result-label">Paragraphs</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-value" id="headingCount">0</div>
+                        <div class="result-label">Headings</div>
+                    </div>
+                </div>
+
+                <div class="keyword-results">
+                    <h3>Keyword Analysis</h3>
+                    <div id="keywordResults">
+                        <p>Enter content and click "Analyze" to see keyword density</p>
+                    </div>
+                </div>
+
+                <div class="heading-results">
+                    <h3>Heading Usage</h3>
+                    <div id="headingResults">
+                        <p>No heading data available yet</p>
+                    </div>
+                </div>
+
+                <div class="seo-feedback">
+                    <h3 class="feedback-title">SEO Feedback</h3>
+                    <div id="seoFeedback">
+                        <p>Analysis will appear here after you analyze your content</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const contentInput = document.getElementById('contentInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const keywordSearch = document.getElementById('keywordSearch');
+            const searchBtn = document.getElementById('searchBtn');
+            const wordCountEl = document.getElementById('wordCount');
+            const charCountEl = document.getElementById('charCount');
+            const paraCountEl = document.getElementById('paraCount');
+            const headingCountEl = document.getElementById('headingCount');
+            const keywordResultsEl = document.getElementById('keywordResults');
+            const headingResultsEl = document.getElementById('headingResults');
+            const seoFeedbackEl = document.getElementById('seoFeedback');
+
+            // Analyze button click handler
+            analyzeBtn.addEventListener('click', analyzeContent);
+            
+            // Search button click handler
+            searchBtn.addEventListener('click', highlightKeywords);
+            
+            // Also trigger search when Enter is pressed in search field
+            keywordSearch.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    highlightKeywords();
+                }
+            });
+
+            function analyzeContent() {
+                const content = contentInput.value;
+                if (!content.trim()) {
+                    alert('Please enter some content to analyze');
+                    return;
+                }
+
+                // Basic counts
+                const wordCount = countWords(content);
+                const charCount = content.length;
+                const paraCount = countParagraphs(content);
+                
+                wordCountEl.textContent = wordCount;
+                charCountEl.textContent = charCount;
+                paraCountEl.textContent = paraCount;
+
+                // Heading analysis
+                const headingData = analyzeHeadings(content);
+                headingCountEl.textContent = headingData.totalHeadings;
+                displayHeadingResults(headingData);
+
+                // Keyword analysis
+                const keywordData = analyzeKeywords(content, wordCount);
+                displayKeywordResults(keywordData, wordCount);
+
+                // SEO feedback
+                generateSEOFeeedback(keywordData, headingData, wordCount);
+            }
+
+            function countWords(text) {
+                return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            }
+
+            function countParagraphs(text) {
+                return text.trim() === '' ? 0 : text.split(/\n+/).filter(p => p.trim() !== '').length;
+            }
+
+            function analyzeHeadings(content) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(`<div>${content}</div>`, 'text/html');
+                
+                const headingTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+                const result = {
+                    totalHeadings: 0,
+                    counts: {}
+                };
+
+                headingTags.forEach(tag => {
+                    const elements = doc.querySelectorAll(tag);
+                    result.counts[tag] = elements.length;
+                    result.totalHeadings += elements.length;
+                });
+
+                return result;
+            }
+
+            function displayHeadingResults(headingData) {
+                let html = '';
+                
+                for (const [tag, count] of Object.entries(headingData.counts)) {
+                    const maxRecommended = tag === 'h1' ? 1 : tag === 'h2' ? 5 : tag === 'h3' ? 10 : 15;
+                    const percentage = Math.min((count / maxRecommended) * 100, 100);
+                    
+                    html += `
+                        <div class="heading-item">
+                            <span class="heading-tag">${tag.toUpperCase()}</span>
+                            <span class="heading-count">${count}</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${percentage}%"></div>
+                        </div>
+                    `;
+                }
+
+                headingResultsEl.innerHTML = html;
+            }
+
+            function analyzeKeywords(content, wordCount) {
+                // Remove HTML tags and special characters, convert to lowercase
+                const cleanContent = content.replace(/<[^>]+>/g, ' ')
+                                            .replace(/[^\w\s]/g, ' ')
+                                            .toLowerCase();
+                
+                // Split into words and filter out stopwords
+                const words = cleanContent.split(/\s+/).filter(word => 
+                    word.length > 2 && !isStopWord(word)
+                );
+                
+                // Count word frequencies
+                const wordCounts = {};
+                words.forEach(word => {
+                    wordCounts[word] = (wordCounts[word] || 0) + 1;
+                });
+                
+                // Convert to array and sort by frequency
+                const sortedKeywords = Object.entries(wordCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 10); // Get top 10 keywords
+                
+                // Calculate density for each keyword
+                const keywordsWithDensity = sortedKeywords.map(([word, count]) => {
+                    const density = (count / wordCount) * 100;
+                    return { word, count, density };
+                });
+                
+                return keywordsWithDensity;
+            }
+
+            function isStopWord(word) {
+                const stopWords = [
+                    'the', 'and', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 
+                    'with', 'by', 'from', 'this', 'that', 'these', 'those', 'is', 
+                    'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 
+                    'do', 'does', 'did', 'will', 'would', 'should', 'can', 'could', 
+                    'may', 'might', 'must', 'i', 'you', 'he', 'she', 'it', 'we', 'they'
+                ];
+                return stopWords.includes(word.toLowerCase());
+            }
+
+            function displayKeywordResults(keywordData, wordCount) {
+                if (keywordData.length === 0) {
+                    keywordResultsEl.innerHTML = '<p>No significant keywords found</p>';
+                    return;
+                }
+
+                let html = '';
+                
+                keywordData.forEach(keyword => {
+                    const densityClass = getDensityClass(keyword.density);
+                    
+                    html += `
+                        <div class="keyword-item">
+                            <div class="keyword-info">
+                                <div class="keyword-count">${keyword.count}</div>
+                                <div>${keyword.word}</div>
+                            </div>
+                            <div class="keyword-density ${densityClass}">
+                                ${keyword.density.toFixed(2)}%
+                            </div>
+                        </div>
+                    `;
+                });
+
+                keywordResultsEl.innerHTML = html;
+            }
+
+            function getDensityClass(density) {
+                if (density >= 0.7 && density <= 1) {
+                    return 'keyword-good';
+                } else if (density > 1 && density <= 2) {
+                    return 'keyword-warning';
+                } else if (density > 2) {
+                    return 'keyword-bad';
+                }
+                return '';
+            }
+
+            function generateSEOFeeedback(keywordData, headingData, wordCount) {
+                let feedbackHTML = '';
+                
+                // Check for keyword stuffing
+                const overstuffed = keywordData.filter(k => k.density > 1);
+                if (overstuffed.length > 0) {
+                    feedbackHTML += `
+                        <div class="feedback-item">
+                            <span class="feedback-icon">⚠️</span>
+                            <span>Potential keyword stuffing detected for: ${overstuffed.map(k => k.word).join(', ')}. Ideal keyword density is 0.7-1%.</span>
+                        </div>
+                    `;
+                } else if (keywordData.length > 0 && keywordData[0].density < 0.7) {
+                    feedbackHTML += `
+                        <div class="feedback-item">
+                            <span class="feedback-icon">ℹ️</span>
+                            <span>Your main keywords could be more prominent. Aim for 0.7-1% density.</span>
+                        </div>
+                    `;
+                } else if (keywordData.length > 0) {
+                    feedbackHTML += `
+                        <div class="feedback-item">
+                            <span class="feedback-icon">✅</span>
+                            <span>Good keyword density for your main terms.</span>
+                        </div>
+                    `;
+                }
+                
+                // Check H1 count
+                if (headingData.counts.h1 === 0) {
+                    feedbackHTML += `
+                        <div class="feedback-item">
+                            <span class="feedback-icon">❌</span>
+                            <span>No H1 heading found. Add one main heading for better SEO.</span>
+                        </div>
+                    `;
+                } else if (headingData.counts.h1 > 1) {
+                    feedbackHTML += `
+                        <div class="feedback-item">
+                            <span class="feedback-icon">⚠️</span>
+                            <span>Multiple H1 headings detected. Typically you should have only one H1 per page.</span>
+                        </div>
+                    `;
+                } else {
+                    feedbackHTML += `
+                        <div class="feedback-item">
+                            <span class="feedback-icon">✅</span>
+                            <span>Good H1 heading structure.</span>
+                        </div>
+                    `;
+                }
+                
+                // Check heading hierarchy
+                if (headingData.counts.h2 === 0 && headingData.totalHeadings > 0) {
+                    feedbackHTML += `
+                        <div class="feedback-item">
+                            <span class="feedback-icon">⚠️</span>
+                            <span>You have headings but no H2s. Consider using H2 for main section headings.</span>
+                        </div>
+                    `;
+                }
+                
+                // Check content length
+                if (wordCount < 300) {
+                    feedbackHTML += `
+                        <div class="feedback-item">
+                            <span class="feedback-icon">⚠️</span>
+                            <span>Content is quite short (${wordCount} words). Consider expanding to at least 300 words for better SEO.</span>
+                        </div>
+                    `;
+                } else if (wordCount < 600) {
+                    feedbackHTML += `
+                        <div class="feedback-item">
+                            <span class="feedback-icon">ℹ️</span>
+                            <span>Content length is okay (${wordCount} words), but longer content (600+ words) often ranks better.</span>
+                        </div>
+                    `;
+                } else {
+                    feedbackHTML += `
+                        <div class="feedback-item">
+                            <span class="feedback-icon">✅</span>
+                            <span>Good content length (${wordCount} words).</span>
+                        </div>
+                    `;
+                }
+                
+                seoFeedbackEl.innerHTML = feedbackHTML || '<p>No specific SEO feedback available.</p>';
+            }
+
+            function highlightKeywords() {
+                const keyword = keywordSearch.value.trim().toLowerCase();
+                if (!keyword) {
+                    alert('Please enter a keyword to search');
+                    return;
+                }
+                
+                const content = contentInput.value;
+                if (!content) {
+                    alert('No content to search');
+                    return;
+                }
+                
+                // Escape special regex characters
+                const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(escapedKeyword, 'gi');
+                
+                // Count occurrences
+                const matches = content.match(regex);
+                const count = matches ? matches.length : 0;
+                
+                // Highlight matches
+                const highlightedContent = content.replace(regex, match => 
+                    `<span class="highlight">${match}</span>`
+                );
+                
+                contentInput.innerHTML = highlightedContent;
+                
+                // Show count in search button
+                searchBtn.textContent = `Search (${count})`;
+                setTimeout(() => {
+                    searchBtn.textContent = 'Search';
+                }, 2000);
+                
+                // If the content is in a textarea, we need to use a different approach
+                // since textarea doesn't support HTML
+                if (contentInput.tagName === 'TEXTAREA') {
+                    // Create a temporary div to hold the highlighted content
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = highlightedContent;
+                    
+                    // Replace textarea with the div
+                    const newDiv = document.createElement('div');
+                    newDiv.className = 'content-input';
+                    newDiv.style.minHeight = contentInput.style.minHeight;
+                    newDiv.style.whiteSpace = 'pre-wrap';
+                    newDiv.innerHTML = tempDiv.innerHTML;
+                    
+                    contentInput.replaceWith(newDiv);
+                    
+                    // Store reference to restore later
+                    newDiv._originalTextarea = contentInput;
+                    newDiv._keyword = keyword;
+                    
+                    // Add a way to revert back to textarea
+                    const revertBtn = document.createElement('button');
+                    revertBtn.textContent = 'Edit Text';
+                    revertBtn.style.marginTop = '10px';
+                    revertBtn.style.padding = '5px 10px';
+                    revertBtn.style.backgroundColor = '#f0f0f0';
+                    revertBtn.style.border = '1px solid #ddd';
+                    revertBtn.style.borderRadius = '4px';
+                    revertBtn.style.cursor = 'pointer';
+                    
+                    revertBtn.addEventListener('click', function() {
+                        newDiv.replaceWith(contentInput);
+                        contentInput.value = newDiv.textContent;
+                    });
+                    
+                    newDiv.parentNode.insertBefore(revertBtn, newDiv.nextSibling);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
